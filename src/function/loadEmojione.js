@@ -47,14 +47,6 @@ function(emojione, uniRegexp, emojioneVersion, readyCallbacks, emojioneSupportMo
                     emojioneVersion = detectVersion(emojione);
                     emojioneSupportMode = getSupportMode(emojioneVersion);
                     cdn.base = cdn.defaultBase + emojioneVersion + "/assets";
-                    if (options.sprite) {
-                        var sprite = cdn.base + "/sprites/emojione.sprites.css";
-                        if (document.createStyleSheet) {
-                            document.createStyleSheet(sprite);
-                        } else {
-                            $('<link/>', {rel: 'stylesheet', href: sprite}).appendTo('head');
-                        }
-                    }
                     while (readyCallbacks.length) {
                         readyCallbacks.shift().call();
                     }

@@ -3,7 +3,7 @@
  * https://github.com/mervick/emojionearea
  * Copyright Andrey Izman and other contributors
  * Released under the MIT license
- * Date: 2017-03-06T21:02Z
+ * Date: 2018-08-07T01:43Z
  */
 window = ( typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {} );
 document = window.document || {};
@@ -1120,14 +1120,6 @@ document = window.document || {};
                     emojioneVersion = detectVersion(emojione);
                     emojioneSupportMode = getSupportMode(emojioneVersion);
                     cdn.base = cdn.defaultBase + emojioneVersion + "/assets";
-                    if (options.sprite) {
-                        var sprite = cdn.base + "/sprites/emojione.sprites.css";
-                        if (document.createStyleSheet) {
-                            document.createStyleSheet(sprite);
-                        } else {
-                            $('<link/>', {rel: 'stylesheet', href: sprite}).appendTo('head');
-                        }
-                    }
                     while (readyCallbacks.length) {
                         readyCallbacks.shift().call();
                     }
@@ -1307,11 +1299,20 @@ document = window.document || {};
         loadEmojione(options);
         emojioneReady(function() {
             self.each(function() {
-                var $this = $(this);
-                if (!$this.hasClass('emojionearea-text')) {
-                    $this.addClass('emojionearea-text').html(htmlFromText(($this.is('TEXTAREA') || $this.is('INPUT') ? $this.val() : $this.text()), pseudoSelf));
+                if (typeof this.emojioneAreaText === 'undefined') {
+                    this.emojioneAreaText = {
+                        $this: $(this),
+                        getText: function() {
+                            return textFromHtml(this.$this.html(), pseudoSelf);
+                        },
+                        setText: function(text) {
+                            return this.$this.html(htmlFromText(text, pseudoSelf));
+                        }
+                    };
+                    this.emojioneAreaText.$this.addClass('emojionearea-text');
+                    this.emojioneAreaText.setText(this.emojioneAreaText.$this.is('TEXTAREA') || this.emojioneAreaText.$this.is('INPUT') ? this.emojioneAreaText.$this.val() : this.emojioneAreaText.$this.text());
                 }
-                return $this;
+                return this.emojioneAreaText.$this;
             });
         });
 

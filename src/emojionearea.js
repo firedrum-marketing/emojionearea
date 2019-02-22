@@ -37,11 +37,20 @@ function($, EmojioneArea, getDefaultOptions, htmlFromText, blankImg, emojioneSup
         loadEmojione(options);
         emojioneReady(function() {
             self.each(function() {
-                var $this = $(this);
-                if (!$this.hasClass('emojionearea-text')) {
-                    $this.addClass('emojionearea-text').html(htmlFromText(($this.is('TEXTAREA') || $this.is('INPUT') ? $this.val() : $this.text()), pseudoSelf));
+                if (typeof this.emojioneAreaText === 'undefined') {
+                    this.emojioneAreaText = {
+                        $this: $(this),
+                        getText: function() {
+                            return textFromHtml(this.$this.html(), pseudoSelf);
+                        },
+                        setText: function(text) {
+                            return this.$this.html(htmlFromText(text, pseudoSelf));
+                        }
+                    };
+                    this.emojioneAreaText.$this.addClass('emojionearea-text');
+                    this.emojioneAreaText.setText(this.emojioneAreaText.$this.is('TEXTAREA') || this.emojioneAreaText.$this.is('INPUT') ? this.emojioneAreaText.$this.val() : this.emojioneAreaText.$this.text());
                 }
-                return $this;
+                return this.emojioneAreaText.$this;
             });
         });
 
