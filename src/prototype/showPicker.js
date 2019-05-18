@@ -15,4 +15,16 @@ function(EmojioneArea, trigger) {
         trigger(self, "picker.show", [self.picker]);
         return self;
     }
+    EmojioneArea.prototype.showSysTagPicker = function () {
+        var self = this;
+        if (self._stsh_timer) {
+            window.clearTimeout(self._stsh_timer);
+        }
+        self.sysTagPicker.removeClass("hidden");
+        self._stsh_timer =  window.setTimeout(function() {
+            self.sysTagButton.addClass("active");
+        }, 50);
+        trigger(self, "sysTagPicker.show", [self.sysTagPicker]);
+        return self;
+    }
 });

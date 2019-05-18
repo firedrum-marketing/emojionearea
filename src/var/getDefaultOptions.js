@@ -20,7 +20,8 @@ function($) {
             pickerPosition    : "top", // top | bottom | right
             filtersPosition   : "top", // top | bottom
             hidePickerOnBlur  : true,
-            buttonTitle       : "Use the TAB key to insert emoji faster",
+            sysTagButtonTitle : "Use the CTRL/CMD key to insert merge tags faster",
+            buttonTitle       : "Use the ALT key to insert emoji faster",
             tones             : true,
             tonesStyle        : "bullet", // bullet | radio | square | checkbox
             inline            : null, // null - auto

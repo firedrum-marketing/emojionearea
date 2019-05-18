@@ -3,7 +3,7 @@
  * https://github.com/mervick/emojionearea
  * Copyright Andrey Izman and other contributors
  * Released under the MIT license
- * Date: 2018-08-07T01:43Z
+ * Date: 2019-05-18T00:44Z
  */
 window = ( typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {} );
 document = window.document || {};
@@ -138,7 +138,8 @@ document = window.document || {};
             pickerPosition    : "top", // top | bottom | right
             filtersPosition   : "top", // top | bottom
             hidePickerOnBlur  : true,
-            buttonTitle       : "Use the TAB key to insert emoji faster",
+            sysTagButtonTitle : "Use the CTRL/CMD key to insert merge tags faster",
+            buttonTitle       : "Use the ALT key to insert emoji faster",
             tones             : true,
             tonesStyle        : "bullet", // bullet | radio | square | checkbox
             inline            : null, // null - auto
@@ -579,7 +580,7 @@ document = window.document || {};
         self.floatingPicker = pickerPosition === 'top' || pickerPosition === 'bottom';
 
         var sourceValFunc = source.is("TEXTAREA") || source.is("INPUT") ? "val" : "text",
-            editor, button, picker, tones, filters, filtersBtns, search, emojisList, categories, scrollArea,
+            editor, sysTagButton, button, picker, sysTagPicker, tones, filters, filtersBtns, search, emojisList, sysTagList, categories, scrollArea, sysTagScrollArea,
             app = div({
                 "class" : css_class + ((self.standalone) ? " " + css_class + "-standalone " : " ") + (source.attr("class") || ""),
                 role: "application"
@@ -589,6 +590,28 @@ document = window.document || {};
                 placeholder: options["placeholder"] || source.data("placeholder") || source.attr("placeholder") || "",
                 tabindex: 0
             }),
+            sysTagButton = self.sysTagButton = div({
+                    "class": css_class + "-button " + css_class + "-system-tag-button",
+                    "title": options.sysTagButtonTitle
+                },
+                div('button-open'),
+                div('button-close')
+            ),
+            sysTagPicker = self.sysTagPicker = div({
+                    "class": css_class + "-picker " + css_class + "-system-tag-picker"
+                },
+                div('wrapper',
+                    sysTagScrollArea = div({
+                            "class": css_class + "-scroll-area " + css_class + "-system-tag-scroll-area"
+                        },
+                        sysTagList = div({
+                            "class": css_class + "-emojis-list " + css_class + "-system-tag-list"
+                        })
+                    )
+                )
+            ).addClass(selector('picker-position-' + options.pickerPosition, true))
+             .addClass(selector('filters-position-' + options.filtersPosition, true))
+             .addClass('hidden'),
             button = self.button = div('button',
                 div('button-open'),
                 div('button-close')
@@ -628,6 +651,160 @@ document = window.document || {};
              .addClass(selector('filters-position-' + options.filtersPosition, true))
              .addClass('hidden')
         );
+
+        var systemTags = [];
+        var defaultSystemTags1 = [ {
+            text: 'Date Today',
+            value: '[DateToday]'
+        }, {
+            text: 'Email From Address',
+            value: '[EmailFromAddress]'
+        }, {
+            text: 'Contact First Name',
+            value: '[MemberFirstName]'
+        }, {
+            text: 'Contact Last Name',
+            value: '[MemberLastName]'
+        }, {
+            text: 'Contact Email Address',
+            value: '[MemberEmailAddress]'
+        }, {
+            text: 'Contact Company Name',
+            value: '[MemberCompanyName]'
+        }, {
+            text: 'Contact Street Address',
+            value: '[MemberStreetAddress]'
+        }, {
+            text: 'Contact Street Address 2',
+            value: '[MemberStreetAddress2]'
+        }, {
+            text: 'Contact City',
+            value: '[MemberCity]'
+        }, {
+            text: 'Contact State',
+            value: '[MemberState]'
+        }, {
+            text: 'Contact ZIP Code',
+            value: '[MemberZIPCode]'
+        }, {
+            text: 'Contact Phone Number',
+            value: '[MemberPhoneNumber]'
+        }, {
+            text: 'Contact Fax Number',
+            value: '[MemberFaxNumber]'
+        }, {
+            text: 'Contact Mobile Number',
+            value: '[MemberMobilePhoneNumber]'
+        }, {
+            text: 'Contact Gender',
+            value: '[MemberGender]'
+        }, {
+            text: 'Contact Birthday',
+            value: '[MemberBirthday]'
+        }, {
+            text: 'Contact Anniversary',
+            value: '[MemberAnniversary]'
+        } ];
+        var defaultSystemTags2 = [ {
+            text: 'Contact ID',
+            value: '[MemberID]'
+        }, {
+            text: 'User Company Name',
+            value: '[UserCompanyName]'
+        }, {
+            text: 'User First Name',
+            value: '[UserFirstName]'
+        }, {
+            text: 'User Last Name',
+            value: '[UserLastName]'
+        }, {
+            text: 'User Phone Number',
+            value: '[UserPhoneNumber]'
+        }, {
+            text: 'User Fax Number',
+            value: '[UserFaxNumber]'
+        }, {
+            text: 'User Email Address',
+            value: '[UserEmailAddress]'
+        }, {
+            text: 'User Website Address',
+            value: '[UserWebsiteAddress]'
+        }, {
+            text: 'User Street Address',
+            value: '[UserStreetAddress]'
+        }, {
+            text: 'User City',
+            value: '[UserCity]'
+        }, {
+            text: 'User State',
+            value: '[UserState]'
+        }, {
+            text: 'User ZIP Code',
+            value: '[UserZIPCode]'
+        }, {
+            text: 'User Logo',
+            value: '[UserLogo]'
+        }, {
+            text: 'User Logo 2',
+            value: '[UserLogo2]'
+        } ];
+
+        var customFieldUpdater = function (customFields, skipAttach) {
+            systemTags.length = 0;
+
+            Array.prototype.push.apply( systemTags, defaultSystemTags1 );
+
+            if ( customFields ) {
+                Array.prototype.push.apply( systemTags, customFields.sort(function(a, b) {
+                    var a1 = a.name.toLowerCase();
+                    var b1 = b.name.toLowerCase();
+
+                    if (a1 < b1) {
+                        return -1;
+                    } else if (a1 > b1) {
+                        return 1;
+                    }
+
+                    return 0;
+                }).map( function (customField) {
+                    return {
+                        text: 'Contact ' + customField.name,
+                        value: '[MemberCustomField name="' + customField.name + '"]'
+                    };
+                } ) );
+            }
+
+            Array.prototype.push.apply( systemTags, defaultSystemTags2 );
+
+            sysTagList.html(systemTags.reduce(function(accumulator, systemTag) {
+                return accumulator + '<div class="systagbtn" role="button" data-value="' + systemTag.value + '">' + systemTag.text + '</div>';
+            }, ''));
+
+            if (!skipAttach) {
+                sysTagList.children(".systagbtn").on("click", function() {
+                    self.trigger("systagbtn.click", $(this));
+                });
+            }
+        };
+
+        if ( window.WebSocket ) {
+            var eventCallback = function(event) {
+                customFieldUpdater( event.detail );
+            };
+            sysAddEvent( 'emailMarketingPlatform.customFields', eventCallback );
+            editor.on( 'Remove', function (e) {
+                sysRemoveEvent( 'emailMarketingPlatform.customFields', eventCallback );
+            } );
+            customFieldUpdater( window.emailMarketingPlatform.customFields, true );
+        } else if ( options.systemTagsCustomFields ) {
+            customFieldUpdater( options.systemTagsCustomFields.map( function (customFieldName) {
+                return {
+                    name: customFieldName
+                }
+            } ), true );
+        } else {
+            customFieldUpdater( [], true );
+        }
 
         self.searchSel = null;
 
@@ -721,9 +898,11 @@ document = window.document || {};
         // 5) trigger() calls handlers stored into eventStorage{}
 
         attach(self, emojisList.find(".emojibtn"), {click: "emojibtn.click"});
+        attach(self, sysTagList.find(".systagbtn"), {click: "systagbtn.click"});
         attach(self, window, {resize: "!resize"});
         attach(self, tones.children(), {click: "tone.click"});
-        attach(self, [picker, button], {mousedown: "!mousedown"}, editor);
+        attach(self, [picker, sysTagPicker, button, sysTagButton], {mousedown: "!mousedown"}, editor);
+        attach(self, sysTagButton, {click: "systagbutton.click"});
         attach(self, button, {click: "button.click"});
         attach(self, editor, {paste :"!paste"}, editor);
         attach(self, editor, ["focus", "blur"], function() { return self.stayFocused ? false : editor } );
@@ -804,8 +983,23 @@ document = window.document || {};
             if (button.is(".active")) {
                 self.hidePicker();
             } else {
+                if (self.sysTagButton.is(".active")) {
+                    self.hideSysTagPicker();
+                }
                 self.showPicker();
                 self.searchSel = null;
+            }
+        })
+
+        .on("@systagbutton.click", function(sysTagButton) {
+            if (sysTagButton.is(".active")) {
+                self.hideSysTagPicker();
+            } else {
+                if (self.button.is(".active")) {
+                    self.hidePicker();
+                    self.searchSel = null;
+                }
+                self.showSysTagPicker();
             }
         })
 
@@ -889,7 +1083,35 @@ document = window.document || {};
             self.trigger('search.keypress');
         })
 
+        .on("@systagbtn.click", function(systagbtn) {
+            editor.removeClass("has-placeholder");
+
+            if (self.standalone) {
+                editor.html(systagbtn.data("value"));
+                self.trigger("blur");
+            } else {
+                saveSelection(editor[0]);
+                pasteHtmlAtCaret(systagbtn.data("value"));
+            }
+        })
+
         .on("@!resize @keyup @emojibtn.click", calcButtonPosition)
+
+        .on("@!mousedown", function(editor, event) {
+            if ($(event.target).hasClass('search')) {
+                // Allow search clicks
+                self.stayFocused = true;
+                if (self.searchSel == null) {
+                    self.searchSel = saveSelection(editor[0]);
+                }
+            } else {
+                if (!app.is(".focused")) {
+                    editor.focus();
+                }
+                event.preventDefault();
+            }
+            return false;
+        })
 
         .on("@!mousedown", function(editor, event) {
             if ($(event.target).hasClass('search')) {
@@ -985,16 +1207,21 @@ document = window.document || {};
 
         if (options.shortcuts) {
             self.on("@keydown", function(_, e) {
-                if (!e.ctrlKey) {
-                    if (e.which == 9) {
-                        e.preventDefault();
-                        button.click();
+                if (e.which === 17) { // CTRL
+                    e.preventDefault();
+                    sysTagButton.click();
+                }
+                else if (e.which === 18) { // ALT
+                    e.preventDefault();
+                    button.click();
+                }
+                else if (e.which === 27) { // Escape
+                    e.preventDefault();
+                    if (button.is(".active")) {
+                        self.hidePicker();
                     }
-                    else if (e.which == 27) {
-                        e.preventDefault();
-                        if (button.is(".active")) {
-                            self.hidePicker();
-                        }
+                    else if (sysTagButton.is(".active")) {
+                        self.hideSysTagPicker();
                     }
                 }
             });
@@ -1247,6 +1474,18 @@ document = window.document || {};
         trigger(self, "picker.show", [self.picker]);
         return self;
     }
+    EmojioneArea.prototype.showSysTagPicker = function () {
+        var self = this;
+        if (self._stsh_timer) {
+            window.clearTimeout(self._stsh_timer);
+        }
+        self.sysTagPicker.removeClass("hidden");
+        self._stsh_timer =  window.setTimeout(function() {
+            self.sysTagButton.addClass("active");
+        }, 50);
+        trigger(self, "sysTagPicker.show", [self.sysTagPicker]);
+        return self;
+    }
 
     EmojioneArea.prototype.hidePicker = function () {
         var self = this;
@@ -1258,6 +1497,18 @@ document = window.document || {};
             self.picker.addClass("hidden");
         }, 500);
         trigger(self, "picker.hide", [self.picker]);
+        return self;
+    }
+    EmojioneArea.prototype.hideSysTagPicker = function () {
+        var self = this;
+        if (self._stsh_timer) {
+            window.clearTimeout(self._stsh_timer);
+        }
+        self.sysTagButton.removeClass("active");
+        self._stsh_timer =  window.setTimeout(function() {
+            self.sysTagPicker.addClass("hidden");
+        }, 500);
+        trigger(self, "sysTagPicker.hide", [self.sysTagPicker]);
         return self;
     }
 
